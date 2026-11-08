@@ -60,9 +60,9 @@ body{height:100%;margin:0;overflow:hidden;background:var(--wall);color:var(--ink
   border:clamp(8px,1.8vmin,16px) solid #e3a23a;box-shadow:0 0 0 5px #b97a1f,0 12px 0 rgba(0,0,0,.12)}
 .mirror-area #wolfWrap{height:82%;z-index:2}
 .closet{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:clamp(12px,3vh,28px);min-width:0}
-.rack{display:grid;grid-template-columns:repeat(4,auto);gap:clamp(8px,1.6vmin,16px);padding:clamp(12px,2.4vmin,22px);
+.rack{display:grid;grid-template-columns:repeat(5,auto);gap:clamp(8px,1.6vmin,16px);padding:clamp(12px,2.4vmin,22px);
   background:var(--wood);border-radius:22px;box-shadow:inset 0 0 0 6px var(--wood-dk),0 10px 0 rgba(0,0,0,.15)}
-.tile{width:min(10.5vw,24vh);aspect-ratio:1;min-width:58px;border-radius:20px;border:0;background:var(--paper);cursor:pointer;
+.tile{width:min(8.4vw,22vh);aspect-ratio:1;min-width:58px;border-radius:20px;border:0;background:var(--paper);cursor:pointer;
   display:grid;place-items:center;padding:8%;box-shadow:0 6px 0 rgba(0,0,0,.2);transition:transform .15s ease,background .2s}
 .tile svg{width:100%;height:100%;pointer-events:none}
 .tile.on{background:#fff2a8;box-shadow:0 0 0 5px #ffb800,0 6px 0 rgba(0,0,0,.2);transform:scale(1.06)}
@@ -108,7 +108,7 @@ body{height:100%;margin:0;overflow:hidden;background:var(--wall);color:var(--ink
   #wardrobe{grid-template-columns:1fr;grid-template-rows:1fr auto;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
   #wardrobe::after{height:10%}
   .mirror{width:min(70%,40vh)}
-  .tile{width:min(19vw,12vh)}
+  .tile{width:min(15.5vw,11vh)}
   .stage-wolf{height:min(40%,46vw);bottom:22%}
   .slot{bottom:22%;padding-left:40%}
   .house{width:54vw}
@@ -165,6 +165,22 @@ body{height:100%;margin:0;overflow:hidden;background:var(--wall);color:var(--ink
       <circle cx="86" cy="186" r="4.5" fill="#ffd84d"/><circle cx="86" cy="208" r="4.5" fill="#ffd84d"/>
       <circle cx="114" cy="186" r="4.5" fill="#ffd84d"/><circle cx="114" cy="208" r="4.5" fill="#ffd84d"/>
     </g>
+    <g id="it-hoodie">
+      <path d="M64 150 Q44 172 46 196" stroke="#ff7fb0" stroke-width="27" stroke-linecap="round" fill="none"/>
+      <path d="M136 150 Q156 172 154 196" stroke="#ff7fb0" stroke-width="27" stroke-linecap="round" fill="none"/>
+      <path d="M38 192 h17 M145 192 h17" stroke="#e85d97" stroke-width="7" stroke-linecap="round"/>
+      <path d="M56 150 Q49 192 63 233 L137 233 Q151 192 144 150 Q100 132 56 150Z" fill="#ff7fb0"/>
+      <rect x="62" y="225" width="76" height="9" rx="4.5" fill="#e85d97"/>
+      <path d="M76 204 H124 L118 224 H82Z" fill="#e85d97"/>
+      <path d="M100 186 C82 174 84 158 94 158 C98 158 100 161 100 164 C100 161 102 158 106 158 C116 158 118 174 100 186Z" fill="#fff"/>
+      <path d="M92 146 v20 M108 146 v20" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="92" cy="168" r="3" fill="#fff"/><circle cx="108" cy="168" r="3" fill="#fff"/>
+    </g>
+    <g id="it-cape">
+      <path d="M60 138 Q100 150 140 138 L162 252 Q100 266 38 252Z" fill="#3d9fe6"/>
+      <path d="M60 138 Q100 150 140 138 L142 146 Q100 160 58 146Z" fill="#2a7fc4"/>
+      <path d="M100 176 L107 194 L126 194 L111 205 L117 223 L100 212 L83 223 L89 205 L74 194 L93 194Z" fill="#ffd84d"/>
+    </g>
     <g id="it-tutu">
       <path d="M54 222 L146 222 L162 248 L149 241 L138 252 L126 242 L114 253 L100 243 L86 253 L74 242 L62 252 L51 241 L38 248Z" fill="#ff9ccc" stroke="#f06fae" stroke-width="2.5" stroke-linejoin="round"/>
       <rect x="55" y="214" width="90" height="11" rx="5.5" fill="#f06fae"/>
@@ -220,12 +236,14 @@ body{height:100%;margin:0;overflow:hidden;background:var(--wall);color:var(--ink
             <ellipse cx="129" cy="275" rx="20" ry="10" fill="var(--wolf-dk)"/>
             <use href="#it-shoes" data-slot="feet" data-item="shoes" visibility="hidden"/>
             <use href="#it-boots" data-slot="feet" data-item="boots" visibility="hidden"/>
+            <use href="#it-cape" data-slot="back" data-item="cape" visibility="hidden"/>
             <ellipse cx="100" cy="185" rx="46" ry="56" fill="var(--wolf)"/>
             <ellipse cx="100" cy="196" rx="28" ry="38" fill="var(--wolf-lt)"/>
             <path d="M64 150 Q40 175 44 206" stroke="var(--wolf)" stroke-width="20" stroke-linecap="round" fill="none"/>
             <path d="M136 150 Q160 175 156 206" stroke="var(--wolf)" stroke-width="20" stroke-linecap="round" fill="none"/>
             <use href="#it-tutu" data-slot="hips" data-item="tutu" visibility="hidden"/>
             <use href="#it-jacket" data-slot="body" data-item="jacket" visibility="hidden"/>
+            <use href="#it-hoodie" data-slot="body" data-item="hoodie" visibility="hidden"/>
             <circle cx="44" cy="208" r="12" fill="var(--wolf-dk)"/><circle cx="156" cy="208" r="12" fill="var(--wolf-dk)"/>
             <use href="#it-scarf" data-slot="neck" data-item="scarf" visibility="hidden"/>
             <!-- head -->
@@ -411,6 +429,8 @@ const ITEMS = [
   {id:'glasses',slot:'eyes', vb:'58 62 84 44',  word:'Óculos!'},
   {id:'scarf',  slot:'neck', vb:'50 126 100 86',word:'Cachecol!'},
   {id:'jacket', slot:'body', vb:'26 132 148 108',word:'Casaco!'},
+  {id:'hoodie', slot:'body', vb:'26 132 148 108',word:'Moletom rosa!'},
+  {id:'cape',   slot:'back', vb:'34 132 132 136',word:'Capa de herói!'},
   {id:'tutu',   slot:'hips', vb:'34 208 132 50',word:'Saia!'},
   {id:'shoes',  slot:'feet', vb:'36 244 128 48',word:'Sandálias!'},
   {id:'boots',  slot:'feet', vb:'44 228 112 62',word:'Botas!'},
