@@ -171,10 +171,17 @@ body{height:100%;margin:0;overflow:hidden;background:var(--wall);color:var(--ink
       <circle cx="80" cy="235" r="2.5" fill="#fff"/><circle cx="106" cy="238" r="2.5" fill="#fff"/><circle cx="128" cy="234" r="2.5" fill="#fff"/>
     </g>
     <g id="it-shoes">
-      <ellipse cx="71" cy="275" rx="24" ry="12" fill="#ff6fa8"/><ellipse cx="129" cy="275" rx="24" ry="12" fill="#ff6fa8"/>
-      <ellipse cx="65" cy="270" rx="7" ry="3" fill="#fff" opacity=".6"/><ellipse cx="123" cy="270" rx="7" ry="3" fill="#fff" opacity=".6"/>
-      <path d="M71 265 L59 258 L59 272Z M71 265 L83 258 L83 272Z" fill="#ffd84d"/><circle cx="71" cy="265" r="4" fill="#ffb800"/>
-      <path d="M129 265 L117 258 L117 272Z M129 265 L141 258 L141 272Z" fill="#ffd84d"/><circle cx="129" cy="265" r="4" fill="#ffb800"/>
+      <g id="clog-l">
+        <path d="M46 279 Q44 257 64 254 L78 254 Q96 256 97 279Z" fill="#b99cf2"/>
+        <ellipse cx="90" cy="270" rx="5" ry="6" fill="#8d6ed6"/>
+        <rect x="43" y="276" width="56" height="12" rx="6" fill="#9a7fe0"/>
+        <path d="M48 288 v-4 M56 288 v-4 M64 288 v-4 M72 288 v-4 M80 288 v-4 M88 288 v-4 M95 288 v-4" stroke="#7b5fc8" stroke-width="3" stroke-linecap="round"/>
+        <rect x="43" y="276" width="56" height="5" rx="2.5" fill="#fff" opacity=".85"/>
+        <path d="M52 270 Q38 266 48 252" stroke="#ff5fa2" stroke-width="7" fill="none" stroke-linecap="round"/>
+        <circle cx="52" cy="270" r="4.5" fill="#fff"/>
+        <use href="#pigface" transform="translate(73 264) scale(.85)"/>
+      </g>
+      <use href="#clog-l" transform="translate(200 0) scale(-1 1)"/>
     </g>
     <g id="it-boots">
       <rect x="58" y="236" width="34" height="42" rx="7" fill="#ffcf2e"/><ellipse cx="70" cy="277" rx="23" ry="10" fill="#ffcf2e"/>
@@ -405,7 +412,7 @@ const ITEMS = [
   {id:'scarf',  slot:'neck', vb:'50 126 100 86',word:'Cachecol!'},
   {id:'jacket', slot:'body', vb:'26 132 148 108',word:'Casaco!'},
   {id:'tutu',   slot:'hips', vb:'34 208 132 50',word:'Saia!'},
-  {id:'shoes',  slot:'feet', vb:'42 252 116 38',word:'Sapatinhos!'},
+  {id:'shoes',  slot:'feet', vb:'36 244 128 48',word:'Sandálias!'},
   {id:'boots',  slot:'feet', vb:'44 228 112 62',word:'Botas!'},
 ];
 const worn = {};
