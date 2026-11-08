@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Lobo Mau de Marina</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: two full-screen scenes (wardrobe ↔ three houses); one shared wolf moves between them; icon-only giant buttons */
+:root{
+  --sky:#8fd3f0; --sky-hi:#dff3fb; --grass:#79c267; --grass-dk:#4e9844;
+  --wall:#cfc2ee; --wall-stripe:#c2b3e8; --wood:#9a5f37; --wood-dk:#6e4026;
+  --ink:#3a2c47; --paper:#fffaf2;
+  --wolf:#8a92a6; --wolf-dk:#5d6478; --wolf-lt:#d8dde8;
+  --egg:#ffd84d; --go:#4cc26b; --blow:#3d9fe6; --back:#9b6ad6; --again:#ff8a3d;
+  color-scheme: light;
+}
+html{height:100%;box-sizing:border-box}
+*,*::before,*::after{box-sizing:inherit}
+body{height:100%;margin:0;overflow:hidden;background:var(--wall);color:var(--ink);
+  font-family:"Trebuchet MS",system-ui,sans-serif;
+  touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+#app{position:relative;width:100%;height:100%;overflow:hidden}
+.scene{position:absolute;inset:0;transition:opacity .45s ease}
+.scene[aria-hidden="true"]{opacity:0;pointer-events:none}
+
+/* ---------- Big buttons ---------- */
+.big{border:0;border-radius:50%;width:clamp(72px,13vmin,120px);aspect-ratio:1;display:grid;place-items:center;
+  cursor:pointer;box-shadow:0 8px 0 rgba(0,0,0,.22),inset 0 -6px 0 rgba(0,0,0,.12);
+  transition:transform .12s ease, box-shadow .12s ease;padding:0}
+.big svg{width:62%;height:62%;pointer-events:none}
+.big:active{transform:translateY(6px);box-shadow:0 2px 0 rgba(0,0,0,.22),inset 0 -6px 0 rgba(0,0,0,.12)}
+.big:focus-visible,.tile:focus-visible{outline:5px solid var(--ink);outline-offset:4px}
+.egg{background:var(--egg)} .go{background:var(--go)} .blow{background:var(--blow);width:clamp(96px,18vmin,150px)}
+.back{background:var(--back)} .again{background:var(--again)}
+.pulse{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.14)}}
+
+/* ---------- Wolf ---------- */
+#wolfWrap{position:relative;aspect-ratio:200/290;transform-origin:50% 100%;
+  transition:transform .6s cubic-bezier(.3,1.7,.5,1);cursor:pointer}
+#wolfWrap svg{width:100%;height:100%;overflow:visible;display:block}
+#wolfInner{transform-origin:50% 100%}
+.breathe{animation:breathe 2.6s ease-in-out infinite;transform-origin:100px 280px;transform-box:view-box}
+@keyframes breathe{50%{transform:scaleY(1.025)}}
+.blink{animation:blink 4.5s infinite;transform-origin:center;transform-box:fill-box}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+
+/* ---------- Wardrobe scene ---------- */
+#wardrobe{background:
+  repeating-linear-gradient(90deg,var(--wall) 0 34px,var(--wall-stripe) 34px 68px);
+  display:grid;grid-template-columns:1fr 1.15fr;align-items:stretch;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:14px}
+#wardrobe::after{content:"";position:absolute;left:0;right:0;bottom:0;height:16%;background:var(--wood);
+  box-shadow:inset 0 10px 0 var(--wood-dk);z-index:0}
+.mirror-area{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:center;min-height:0;padding-bottom:3%}
+.mirror{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);width:min(88%,58vh);aspect-ratio:3/4;
+  border-radius:50%/42%;background:radial-gradient(ellipse at 35% 30%,#ffffff 0,#e8f6fb 45%,#bfe3f0 100%);
+  border:clamp(8px,1.8vmin,16px) solid #e3a23a;box-shadow:0 0 0 5px #b97a1f,0 12px 0 rgba(0,0,0,.12)}
+.mirror-area #wolfWrap{height:82%;z-index:2}
+.closet{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:clamp(12px,3vh,28px);min-width:0}
+.rack{display:grid;grid-template-columns:repeat(4,auto);gap:clamp(8px,1.6vmin,16px);padding:clamp(12px,2.4vmin,22px);
+  background:var(--wood);border-radius:22px;box-shadow:inset 0 0 0 6px var(--wood-dk),0 10px 0 rgba(0,0,0,.15)}
+.tile{width:min(10.5vw,24vh);aspect-ratio:1;min-width:58px;border-radius:20px;border:0;background:var(--paper);cursor:pointer;
+  display:grid;place-items:center;padding:8%;box-shadow:0 6px 0 rgba(0,0,0,.2);transition:transform .15s ease,background .2s}
+.tile svg{width:100%;height:100%;pointer-events:none}
+.tile.on{background:#fff2a8;box-shadow:0 0 0 5px #ffb800,0 6px 0 rgba(0,0,0,.2);transform:scale(1.06)}
+.tile:active{transform:scale(.92)}
+.controls{display:flex;gap:clamp(18px,5vw,48px);align-items:center}
+
+/* ---------- Houses scene ---------- */
+#houses{background:linear-gradient(var(--sky) 0%,var(--sky-hi) 70%)}
+.sun{position:absolute;top:7%;right:8%;width:13vmin;aspect-ratio:1;border-radius:50%;background:#ffe066;
+  box-shadow:0 0 0 2.5vmin rgba(255,224,102,.35);animation:spin 20s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cloud{position:absolute;height:7vmin;width:20vmin;background:#fff;border-radius:99px;opacity:.95;animation:drift 40s linear infinite}
+.cloud::before{content:"";position:absolute;width:9vmin;height:9vmin;border-radius:50%;background:#fff;left:3vmin;top:-4vmin}
+.cloud::after{content:"";position:absolute;width:7vmin;height:7vmin;border-radius:50%;background:#fff;left:10vmin;top:-2.5vmin}
+@keyframes drift{from{transform:translateX(-30vw)}to{transform:translateX(120vw)}}
+.ground{position:absolute;left:0;right:0;bottom:0;height:24%;background:var(--grass);box-shadow:inset 0 12px 0 var(--grass-dk)}
+.stage-wolf{position:absolute;left:max(16px,env(safe-area-inset-left,0px));bottom:19%;height:44%;z-index:3}
+.stage-wolf #wolfWrap{height:100%;transform-origin:30% 100%}
+.row{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:19%;display:flex;gap:1.6vw;align-items:flex-end;z-index:2}
+.house{width:min(17vw,30vh);aspect-ratio:140/150;position:relative}
+.house svg{width:100%;height:100%;display:block;overflow:visible}
+.spot{position:absolute;left:12%;right:12%;bottom:-2%;height:8%;border-radius:50%;background:rgba(0,0,0,.15)}
+.hud{position:absolute;inset:auto 0 0 0;display:flex;justify-content:center;align-items:center;gap:clamp(20px,6vw,60px);
+  padding-bottom:calc(2.5vh + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));z-index:5}
+.corner{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));z-index:6}
+.corner.l{left:max(16px,env(safe-area-inset-left,0px))} .corner.r{right:max(16px,env(safe-area-inset-right,0px))}
+.corner .big{width:clamp(60px,10vmin,90px)}
+
+.fx{position:fixed;pointer-events:none;z-index:50}
+.gust{height:6px;border-radius:6px;background:rgba(255,255,255,.95);box-shadow:0 0 6px rgba(255,255,255,.9)}
+.mute{position:absolute;bottom:calc(10px + env(safe-area-inset-bottom,0px));right:max(12px,env(safe-area-inset-right,0px));z-index:20;
+  width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.7);display:grid;place-items:center;cursor:pointer;padding:0}
+.mute svg{width:24px;height:24px}
+
+@media (orientation:portrait){
+  #wardrobe{grid-template-columns:1fr;grid-template-rows:1fr auto;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+  #wardrobe::after{height:10%}
+  .mirror{width:min(70%,40vh)}
+  .tile{width:min(19vw,12vh)}
+  .stage-wolf{height:min(40%,46vw);bottom:22%}
+  .row{bottom:22%}
+  .house{width:21vw}
+  .ground{height:27%}
+  .hud{padding-bottom:calc(4vh + env(safe-area-inset-bottom,0px))}
+}
+@media (prefers-reduced-motion:reduce){
+  .breathe,.sun,.cloud,.pulse{animation:none}
+}
+</style>
+</head>
+<body>
+
+
+<!-- Shared drawings -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <pattern id="bricks" width="24" height="14" patternUnits="userSpaceOnUse">
+      <rect width="24" height="14" fill="#c9563f"/>
+      <path d="M0 .5H24M0 7.5H24M6 0V7M18 7V14" stroke="#e9c9b6" stroke-width="1.6"/>
+    </pattern>
+    <!-- Clothes, drawn in wolf coordinates -->
+    <g id="it-hat">
+      <rect x="74" y="10" width="52" height="48" rx="5" fill="#5b3a8c"/>
+      <rect x="74" y="40" width="52" height="10" fill="#ff7fb0"/>
+      <circle cx="116" cy="45" r="7" fill="#ffd84d"/><circle cx="116" cy="45" r="3" fill="#ff8a3d"/>
+      <ellipse cx="100" cy="57" rx="44" ry="9" fill="#432a6b"/>
+    </g>
+    <g id="it-crown">
+      <path d="M70 58 L70 24 L85 42 L100 16 L115 42 L130 24 L130 58 Z" fill="#ffc928" stroke="#d79a00" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="85" cy="50" r="4.5" fill="#ff5d8f"/><circle cx="100" cy="48" r="5.5" fill="#3d9fe6"/><circle cx="115" cy="50" r="4.5" fill="#4cc26b"/>
+      <circle cx="70" cy="24" r="4" fill="#fff3b0"/><circle cx="100" cy="16" r="4" fill="#fff3b0"/><circle cx="130" cy="24" r="4" fill="#fff3b0"/>
+    </g>
+    <g id="it-glasses">
+      <path d="M82 99 C63 87 65 71 76 71 C80 71 82 74 82 77 C82 74 84 71 88 71 C99 71 101 87 82 99Z" fill="#ff5d8f" fill-opacity=".72" stroke="#e0336d" stroke-width="3"/>
+      <path d="M118 99 C99 87 101 71 112 71 C116 71 118 74 118 77 C118 74 120 71 124 71 C135 71 137 87 118 99Z" fill="#ff5d8f" fill-opacity=".72" stroke="#e0336d" stroke-width="3"/>
+      <path d="M95 79 Q100 74 105 79" stroke="#e0336d" stroke-width="3" fill="none"/>
+      <circle cx="76" cy="78" r="3" fill="#fff" opacity=".9"/><circle cx="112" cy="78" r="3" fill="#fff" opacity=".9"/>
+    </g>
+    <g id="it-scarf">
+      <path d="M58 136 Q100 158 142 136 L144 152 Q100 174 56 152Z" fill="#2fb7a6"/>
+      <path d="M70 143 L68 158 M86 148 L85 164 M114 148 L115 164 M130 143 L132 158" stroke="#ffd84d" stroke-width="5"/>
+      <path d="M116 152 L134 150 L140 196 L120 198Z" fill="#2fb7a6"/>
+      <path d="M118 166 L137 164 M119 180 L139 178" stroke="#ffd84d" stroke-width="5"/>
+      <path d="M121 198 v8 M127 198 v8 M133 197 v8 M139 196 v8" stroke="#2fb7a6" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <g id="it-jacket">
+      <path d="M64 150 Q44 172 46 196" stroke="#e8423f" stroke-width="27" stroke-linecap="round" fill="none"/>
+      <path d="M136 150 Q156 172 154 196" stroke="#e8423f" stroke-width="27" stroke-linecap="round" fill="none"/>
+      <path d="M57 150 Q52 192 66 230 L95 234 L93 148 Q76 138 57 150Z" fill="#e8423f"/>
+      <path d="M143 150 Q148 192 134 230 L105 234 L107 148 Q124 138 143 150Z" fill="#e8423f"/>
+      <path d="M93 148 L78 172 L72 146Z M107 148 L122 172 L128 146Z" fill="#b82b2b"/>
+      <circle cx="86" cy="186" r="4.5" fill="#ffd84d"/><circle cx="86" cy="208" r="4.5" fill="#ffd84d"/>
+      <circle cx="114" cy="186" r="4.5" fill="#ffd84d"/><circle cx="114" cy="208" r="4.5" fill="#ffd84d"/>
+    </g>
+    <g id="it-tutu">
+      <path d="M54 222 L146 222 L162 248 L149 241 L138 252 L126 242 L114 253 L100 243 L86 253 L74 242 L62 252 L51 241 L38 248Z" fill="#ff9ccc" stroke="#f06fae" stroke-width="2.5" stroke-linejoin="round"/>
+      <rect x="55" y="214" width="90" height="11" rx="5.5" fill="#f06fae"/>
+      <circle cx="80" cy="235" r="2.5" fill="#fff"/><circle cx="106" cy="238" r="2.5" fill="#fff"/><circle cx="128" cy="234" r="2.5" fill="#fff"/>
+    </g>
+    <g id="it-shoes">
+      <ellipse cx="71" cy="275" rx="24" ry="12" fill="#ff6fa8"/><ellipse cx="129" cy="275" rx="24" ry="12" fill="#ff6fa8"/>
+      <ellipse cx="65" cy="270" rx="7" ry="3" fill="#fff" opacity=".6"/><ellipse cx="123" cy="270" rx="7" ry="3" fill="#fff" opacity=".6"/>
+      <path d="M71 265 L59 258 L59 272Z M71 265 L83 258 L83 272Z" fill="#ffd84d"/><circle cx="71" cy="265" r="4" fill="#ffb800"/>
+      <path d="M129 265 L117 258 L117 272Z M129 265 L141 258 L141 272Z" fill="#ffd84d"/><circle cx="129" cy="265" r="4" fill="#ffb800"/>
+    </g>
+    <g id="it-boots">
+      <rect x="58" y="236" width="34" height="42" rx="7" fill="#ffcf2e"/><ellipse cx="70" cy="277" rx="23" ry="10" fill="#ffcf2e"/>
+      <rect x="108" y="236" width="34" height="42" rx="7" fill="#ffcf2e"/><ellipse cx="130" cy="277" rx="23" ry="10" fill="#ffcf2e"/>
+      <rect x="56" y="234" width="38" height="9" rx="4" fill="#e6a800"/><rect x="106" y="234" width="38" height="9" rx="4" fill="#e6a800"/>
+      <path d="M50 282 H92 M108 282 H152" stroke="#e6a800" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    <!-- Egg -->
+    <g id="egg-shape">
+      <path d="M50 8 C74 8 88 46 88 66 C88 86 72 98 50 98 C28 98 12 86 12 66 C12 46 26 8 50 8Z" fill="#fff6dc" stroke="#e8c97a" stroke-width="4"/>
+      <ellipse cx="36" cy="40" rx="7" ry="12" fill="#fff" transform="rotate(20 36 40)"/>
+    </g>
+    <!-- Pig face (window) -->
+    <g id="pigface">
+      <circle cx="0" cy="0" r="10" fill="#f9b2c8"/>
+      <path d="M-9 -6 L-6 -14 L-2 -8Z M9 -6 L6 -14 L2 -8Z" fill="#f28aab"/>
+      <ellipse cx="0" cy="3" rx="5" ry="3.6" fill="#f28aab"/><circle cx="-1.8" cy="3" r="1" fill="#a24d6c"/><circle cx="1.8" cy="3" r="1" fill="#a24d6c"/>
+      <circle cx="-4" cy="-3" r="1.4" fill="#3a2c47"/><circle cx="4" cy="-3" r="1.4" fill="#3a2c47"/>
+    </g>
+  </defs>
+</svg>
+
+<div id="app">
+
+  <!-- ===== Scene 1: dressing room ===== -->
+  <section class="scene" id="wardrobe" aria-hidden="false">
+    <div class="mirror-area" id="wardrobeWolfSpot">
+      <div class="mirror"></div>
+      <div id="wolfWrap" role="button" aria-label="Lobo Mau">
+        <svg viewBox="0 0 200 290" aria-hidden="true">
+          <g id="wolfInner"><g class="breathe">
+            <path d="M138 205 C172 202 188 168 178 136 C172 156 162 164 150 168 C160 152 158 142 150 134 C148 158 138 174 126 186Z" fill="var(--wolf-dk)"/>
+            <rect x="60" y="214" width="26" height="60" rx="12" fill="var(--wolf)"/>
+            <rect x="114" y="214" width="26" height="60" rx="12" fill="var(--wolf)"/>
+            <ellipse cx="71" cy="275" rx="20" ry="10" fill="var(--wolf-dk)"/>
+            <ellipse cx="129" cy="275" rx="20" ry="10" fill="var(--wolf-dk)"/>
+            <use href="#it-shoes" data-slot="feet" data-item="shoes" visibility="hidden"/>
+            <use href="#it-boots" data-slot="feet" data-item="boots" visibility="hidden"/>
+            <ellipse cx="100" cy="185" rx="46" ry="56" fill="var(--wolf)"/>
+            <ellipse cx="100" cy="196" rx="28" ry="38" fill="var(--wolf-lt)"/>
+            <path d="M64 150 Q40 175 44 206" stroke="var(--wolf)" stroke-width="20" stroke-linecap="round" fill="none"/>
+            <path d="M136 150 Q160 175 156 206" stroke="var(--wolf)" stroke-width="20" stroke-linecap="round" fill="none"/>
+            <use href="#it-tutu" data-slot="hips" data-item="tutu" visibility="hidden"/>
+            <use href="#it-jacket" data-slot="body" data-item="jacket" visibility="hidden"/>
+            <circle cx="44" cy="208" r="12" fill="var(--wolf-dk)"/><circle cx="156" cy="208" r="12" fill="var(--wolf-dk)"/>
+            <use href="#it-scarf" data-slot="neck" data-item="scarf" visibility="hidden"/>
+            <!-- head -->
+            <path d="M60 80 L64 26 L94 62Z" fill="var(--wolf-dk)"/><path d="M140 80 L136 26 L106 62Z" fill="var(--wolf-dk)"/>
+            <path d="M68 70 L70 42 L86 62Z" fill="#f2a7bf"/><path d="M132 70 L130 42 L114 62Z" fill="#f2a7bf"/>
+            <ellipse cx="100" cy="92" rx="45" ry="41" fill="var(--wolf)"/>
+            <path d="M56 100 L50 108 L60 110 L54 118 L66 116" fill="var(--wolf)"/><path d="M144 100 L150 108 L140 110 L146 118 L134 116" fill="var(--wolf)"/>
+            <ellipse cx="100" cy="115" rx="28" ry="19" fill="var(--wolf-lt)"/>
+            <g id="cheeks" visibility="hidden">
+              <circle cx="72" cy="112" r="14" fill="var(--wolf-lt)"/><circle cx="128" cy="112" r="14" fill="var(--wolf-lt)"/>
+              <circle cx="72" cy="114" r="6" fill="#f7a3bd" opacity=".7"/><circle cx="128" cy="114" r="6" fill="#f7a3bd" opacity=".7"/>
+            </g>
+            <ellipse cx="100" cy="102" rx="11" ry="7.5" fill="#2b2233"/><ellipse cx="96" cy="99" rx="3.5" ry="2" fill="#fff" opacity=".7"/>
+            <g class="blink">
+              <circle cx="82" cy="84" r="10.5" fill="#fff"/><circle cx="118" cy="84" r="10.5" fill="#fff"/>
+              <circle id="pupL" cx="84" cy="86" r="5.2" fill="#2b2233"/><circle id="pupR" cx="120" cy="86" r="5.2" fill="#2b2233"/>
+            </g>
+            <path d="M68 70 L92 76 M132 70 L108 76" stroke="#2b2233" stroke-width="4.5" stroke-linecap="round"/>
+            <g id="m-smile">
+              <path d="M83 121 Q100 136 117 121" stroke="#2b2233" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+              <path d="M92 126 L95 134 L99 127Z M108 126 L105 134 L101 127Z" fill="#fff"/>
+            </g>
+            <g id="m-open" visibility="hidden">
+              <ellipse cx="100" cy="126" rx="13" ry="11" fill="#5a1f2e"/><ellipse cx="100" cy="132" rx="8" ry="4" fill="#ff7f9a"/>
+              <path d="M90 118 L93 124 L96 118Z M110 118 L107 124 L104 118Z" fill="#fff"/>
+            </g>
+            <g id="m-blow" visibility="hidden"><circle cx="100" cy="126" r="5.5" fill="#5a1f2e"/></g>
+            <use href="#it-glasses" data-slot="eyes" data-item="glasses" visibility="hidden"/>
+            <use href="#it-hat" data-slot="head" data-item="hat" visibility="hidden"/>
+            <use href="#it-crown" data-slot="head" data-item="crown" visibility="hidden"/>
+          </g></g>
+        </svg>
+      </div>
+    </div>
+    <div class="closet">
+      <div class="rack" id="rack"></div>
+      <div class="controls">
+        <button class="big egg" id="eggBtn1" aria-label="Dar ovo"><svg viewBox="0 0 100 106"><use href="#egg-shape"/></svg></button>
+        <button class="big go" id="goBtn" aria-label="Ir para as casinhas">
+          <svg viewBox="0 0 100 100"><path d="M14 50 L50 16 L86 50" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M26 46 V84 H74 V46" fill="#fff"/><rect x="42" y="60" width="16" height="24" rx="3" fill="#2f9a4f"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Scene 2: the three houses ===== -->
+  <section class="scene" id="houses" aria-hidden="true">
+    <div class="sun"></div>
+    <div class="cloud" style="top:10%;animation-delay:-8s"></div>
+    <div class="cloud" style="top:22%;animation-delay:-26s;animation-duration:55s"></div>
+    <div class="ground"></div>
+    <div class="stage-wolf" id="stageWolfSpot"></div>
+    <div class="row" id="row">
+      <div class="house" data-kind="straw">
+        <div class="spot"></div>
+        <svg viewBox="0 0 140 150"><g class="hbody">
+          <rect x="22" y="64" width="96" height="82" fill="#f4d35e"/>
+          <path d="M30 66 v80 M42 66 v80 M54 66 v80 M86 66 v80 M98 66 v80 M110 66 v80" stroke="#d9ab35" stroke-width="2.5"/>
+          <path d="M6 72 L70 14 L134 72Z" fill="#e3ac3c"/>
+          <path d="M20 66 L70 22 M36 70 L74 30 M104 70 L70 34 M120 66 L74 26 M58 72 L72 40 M84 72 L70 44" stroke="#c48c25" stroke-width="2.5"/>
+          <path d="M56 146 V112 Q70 98 84 112 V146Z" fill="#a8692b"/>
+          <rect x="88" y="82" width="24" height="22" rx="3" fill="#bfe8f7" stroke="#a8692b" stroke-width="3"/>
+          <use href="#pigface" transform="translate(100 95)"/>
+        </g></svg>
+      </div>
+      <div class="house" data-kind="sticks">
+        <div class="spot"></div>
+        <svg viewBox="0 0 140 150"><g class="hbody">
+          <rect x="22" y="64" width="96" height="82" fill="#b77d4b"/>
+          <path d="M28 62 v86 M38 62 v86 M48 62 v86 M58 62 v86 M68 62 v86 M78 62 v86 M88 62 v86 M98 62 v86 M108 62 v86" stroke="#8a5530" stroke-width="3" stroke-linecap="round"/>
+          <path d="M18 92 H122 M18 120 H122" stroke="#6e4026" stroke-width="4" stroke-linecap="round"/>
+          <path d="M6 72 L70 14 L134 72Z" fill="#7d4a28"/>
+          <path d="M2 74 L72 10 M138 74 L68 10" stroke="#5a321a" stroke-width="5" stroke-linecap="round"/>
+          <path d="M56 146 V112 Q70 98 84 112 V146Z" fill="#5a321a"/>
+          <rect x="28" y="80" width="24" height="22" rx="3" fill="#bfe8f7" stroke="#5a321a" stroke-width="3"/>
+          <use href="#pigface" transform="translate(40 93)"/>
+        </g></svg>
+      </div>
+      <div class="house" data-kind="bricks">
+        <div class="spot"></div>
+        <svg viewBox="0 0 140 150"><g class="hbody">
+          <rect x="94" y="18" width="16" height="34" fill="url(#bricks)"/>
+          <rect x="22" y="64" width="96" height="82" fill="url(#bricks)"/>
+          <path d="M6 72 L70 14 L134 72Z" fill="#6b3a4a"/>
+          <path d="M56 146 V112 Q70 98 84 112 V146Z" fill="#3d6fb3"/><circle cx="78" cy="128" r="2.5" fill="#ffd84d"/>
+          <rect x="88" y="82" width="24" height="22" rx="3" fill="#bfe8f7" stroke="#f5efe6" stroke-width="3"/>
+          <use href="#pigface" transform="translate(100 95)"/>
+        </g></svg>
+      </div>
+    </div>
+    <div class="corner l"><button class="big back" id="backBtn" aria-label="Voltar para as roupas">
+      <svg viewBox="0 0 100 100"><path d="M50 26 a9 9 0 1 1 9 -9" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/><path d="M50 26 L10 66 Q6 74 16 74 H84 Q94 74 90 66Z" fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round"/></svg>
+    </button></div>
+    <div class="corner r"><button class="big again" id="againBtn" aria-label="Construir casinhas de novo">
+      <svg viewBox="0 0 100 100"><path d="M76 34 A32 32 0 1 0 82 56" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round"/><path d="M62 30 L82 16 L84 40Z" fill="#fff"/></svg>
+    </button></div>
+    <div class="hud">
+      <button class="big egg" id="eggBtn2" aria-label="Dar ovo"><svg viewBox="0 0 100 106"><use href="#egg-shape"/></svg></button>
+      <button class="big blow pulse" id="blowBtn" aria-label="Soprar">
+        <svg viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round">
+          <path d="M10 34 H58 a12 12 0 1 0 -12 -12"/><path d="M10 52 H76 a12 12 0 1 1 -12 12"/><path d="M10 70 H40"/>
+        </svg>
+      </button>
+    </div>
+  </section>
+
+  <button class="mute" id="muteBtn" aria-label="Som ligado/desligado"><svg viewBox="0 0 24 24" fill="var(--ink)"><path d="M3 9v6h4l5 4V5L7 9z"/><path id="waves" d="M15 8.5a5 5 0 0 1 0 7M17.5 6a8.5 8.5 0 0 1 0 12" stroke="var(--ink)" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+</div>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- sound ---------------- */
+let ac = null, soundOn = true;
+function A(){ try{ if(!ac) ac = new (window.AudioContext||window.webkitAudioContext)(); if(ac.state==='suspended') ac.resume(); }catch(e){} return ac; }
+function tone(f1,f2,dur,type='sine',vol=.25,delay=0){
+  const a=A(); if(!a||!soundOn) return; const t=a.currentTime+delay;
+  const o=a.createOscillator(), g=a.createGain(); o.type=type;
+  o.frequency.setValueAtTime(f1,t); o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.02); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t+dur+.05);
+}
+function noise(dur,type,f1,f2,vol=.4,delay=0){
+  const a=A(); if(!a||!soundOn) return; const t=a.currentTime+delay;
+  const buf=a.createBuffer(1,Math.floor(a.sampleRate*dur),a.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  const s=a.createBufferSource(); s.buffer=buf;
+  const fl=a.createBiquadFilter(); fl.type=type; fl.Q.value=1.2;
+  fl.frequency.setValueAtTime(f1,t); fl.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  const g=a.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+dur*.25); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  s.connect(fl).connect(g).connect(a.destination); s.start(t);
+}
+const sfx = {
+  pop(){ tone(380,980,.14,'sine',.3); },
+  unpop(){ tone(700,260,.14,'sine',.25); },
+  crunch(){ for(let i=0;i<3;i++) noise(.07,'highpass',2400,3200,.35,i*.09); tone(240,140,.25,'triangle',.2,.3); },
+  grow(){ [0,1,2,3].forEach(i=>tone(330*Math.pow(1.26,i),330*Math.pow(1.26,i)*1.02,.13,'square',.08,i*.08)); },
+  inhale(){ noise(.55,'bandpass',1800,500,.25); },
+  whoosh(){ noise(1.3,'bandpass',300,1600,.55); },
+  oink(d=0){ tone(420,260,.16,'sawtooth',.12,d); tone(460,280,.16,'sawtooth',.12,d+.2); },
+  crash(){ noise(.6,'lowpass',1200,200,.5); },
+  thud(){ tone(120,60,.25,'sine',.4); },
+  howl(){ tone(300,620,.45,'triangle',.18); tone(620,420,.7,'triangle',.18,.45); },
+  fanfare(){ [523,659,784,1047].forEach((f,i)=>tone(f,f,.22,'triangle',.2,i*.15)); tone(1047,1047,.6,'triangle',.2,.6); },
+};
+let ptVoice=null;
+function pickVoice(){ try{ ptVoice = speechSynthesis.getVoices().find(v=>/^pt(-|_)BR/i.test(v.lang)) || speechSynthesis.getVoices().find(v=>/^pt/i.test(v.lang)) || null; }catch(e){} }
+try{ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }catch(e){}
+function say(t){ if(!soundOn) return; try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang='pt-BR'; if(ptVoice) u.voice=ptVoice; u.rate=.95; u.pitch=1.25; speechSynthesis.speak(u);}catch(e){} }
+$('#muteBtn').addEventListener('click',()=>{ soundOn=!soundOn; $('#waves').style.display = soundOn?'':'none'; try{ if(!soundOn) speechSynthesis.cancel(); }catch(e){} });
+
+/* ---------------- wolf ---------------- */
+const wolfWrap = $('#wolfWrap'), wolfInner = $('#wolfInner');
+let eggs = 0;
+const MAX_EGGS = 5;
+function wolfScale(){ return 1 + .1*Math.min(eggs,MAX_EGGS); }
+function applyScale(){ wolfWrap.style.transform = `scale(${wolfScale()})`; }
+function mouth(m){ ['smile','open','blow'].forEach(k=>$('#m-'+k).setAttribute('visibility', k===m?'visible':'hidden')); $('#cheeks').setAttribute('visibility', m==='blow'?'visible':'hidden'); }
+function hop(h=18){ if(reduce) return; wolfInner.animate([{transform:'translateY(0)'},{transform:`translateY(-${h}px) rotate(-3deg)`},{transform:'translateY(0)'},{transform:`translateY(-${h/2}px) rotate(3deg)`},{transform:'translateY(0)'}],{duration:600,easing:'ease-out'}); }
+function wiggle(){ if(reduce) return; wolfInner.animate([{transform:'rotate(0)'},{transform:'rotate(-6deg)'},{transform:'rotate(6deg)'},{transform:'rotate(-4deg)'},{transform:'rotate(0)'}],{duration:500}); }
+wolfWrap.addEventListener('click',()=>{ sfx.howl(); mouth('open'); hop(24); setTimeout(()=>mouth('smile'),900); });
+// eyes follow taps
+document.addEventListener('pointerdown',e=>{
+  const r = wolfWrap.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height*.29;
+  const dx=Math.max(-1,Math.min(1,(e.clientX-cx)/300)), dy=Math.max(-1,Math.min(1,(e.clientY-cy)/300));
+  $('#pupL').setAttribute('cx',82+dx*4); $('#pupL').setAttribute('cy',84+dy*4);
+  $('#pupR').setAttribute('cx',118+dx*4); $('#pupR').setAttribute('cy',84+dy*4);
+});
+
+/* ---------------- wardrobe ---------------- */
+const ITEMS = [
+  {id:'hat',    slot:'head', vb:'50 4 100 66',  word:'Chapéu!'},
+  {id:'crown',  slot:'head', vb:'60 8 80 58',   word:'Coroa!'},
+  {id:'glasses',slot:'eyes', vb:'58 62 84 44',  word:'Óculos!'},
+  {id:'scarf',  slot:'neck', vb:'50 126 100 86',word:'Cachecol!'},
+  {id:'jacket', slot:'body', vb:'26 132 148 108',word:'Casaco!'},
+  {id:'tutu',   slot:'hips', vb:'34 208 132 50',word:'Saia!'},
+  {id:'shoes',  slot:'feet', vb:'42 252 116 38',word:'Sapatinhos!'},
+  {id:'boots',  slot:'feet', vb:'44 228 112 62',word:'Botas!'},
+];
+const worn = {};
+const rack = $('#rack');
+ITEMS.forEach(it=>{
+  const b=document.createElement('button'); b.className='tile'; b.id='tile-'+it.id; b.setAttribute('aria-label',it.word);
+  b.innerHTML=`<svg viewBox="${it.vb}"><use href="#it-${it.id}"/></svg>`;
+  b.addEventListener('click',()=>toggle(it,b)); rack.appendChild(b);
+});
+function render(){
+  $$('#wolfWrap use[data-item]').forEach(u=>u.setAttribute('visibility', worn[u.dataset.slot]===u.dataset.item?'visible':'hidden'));
+  ITEMS.forEach(it=>$('#tile-'+it.id).classList.toggle('on', worn[it.slot]===it.id));
+}
+function toggle(it,btn){
+  if(worn[it.slot]===it.id){ delete worn[it.slot]; sfx.unpop(); wiggle(); }
+  else { worn[it.slot]=it.id; sfx.pop(); hop(); say(it.word); sparkleAt(btn); }
+  render();
+}
+
+/* ---------------- effects ---------------- */
+function centerOf(el){ const r=el.getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2,w:r.width,h:r.height}; }
+function mouthPoint(){ const r=wolfWrap.getBoundingClientRect(); return {x:r.left+r.width*.5, y:r.top+r.height*(126/290)}; }
+function spawn(html,x,y,cls='fx'){ const d=document.createElement('div'); d.className=cls; d.innerHTML=html; d.style.left=x+'px'; d.style.top=y+'px'; document.body.appendChild(d); return d; }
+function sparkleAt(el,n=8,colors=['#ffd84d','#ff6fa8','#3d9fe6','#4cc26b']){
+  if(reduce) return; const c=centerOf(el);
+  for(let i=0;i<n;i++){
+    const s=spawn(`<svg width="22" height="22" viewBox="0 0 20 20"><path d="M10 0 L12.5 7.5 L20 10 L12.5 12.5 L10 20 L7.5 12.5 L0 10 L7.5 7.5Z" fill="${colors[i%colors.length]}"/></svg>`,c.x-11,c.y-11);
+    const a=Math.PI*2*i/n, r=60+Math.random()*50;
+    s.animate([{transform:'translate(0,0) scale(.4)',opacity:1},{transform:`translate(${Math.cos(a)*r}px,${Math.sin(a)*r}px) scale(1.1) rotate(90deg)`,opacity:0}],{duration:700,easing:'ease-out'}).onfinish=()=>s.remove();
+  }
+}
+
+/* ---------------- eggs ---------------- */
+let eating=false;
+function feed(btn){
+  if(eating) return; eating=true; A();
+  btn.classList.remove('pulse');
+  const from=centerOf(btn), to=mouthPoint(), size=Math.min(70,from.w*.7);
+  const e=spawn(`<svg width="${size}" height="${size*1.06}" viewBox="0 0 100 106"><use href="#egg-shape"/></svg>`, from.x-size/2, from.y-size/2);
+  mouth('open'); say('Ovo!');
+  const dx=to.x-from.x, dy=to.y-from.y;
+  e.animate([
+    {transform:'translate(0,0) rotate(0) scale(1)'},
+    {transform:`translate(${dx*.5}px,${dy*.5-140}px) rotate(200deg) scale(1.1)`, offset:.5},
+    {transform:`translate(${dx}px,${dy}px) rotate(360deg) scale(.35)`}
+  ],{duration:reduce?300:900,easing:'ease-in-out'}).onfinish=()=>{
+    e.remove(); sfx.crunch(); mouth('smile');
+    setTimeout(()=>{
+      eggs++; applyScale(); sfx.grow(); hop(10); sparkleAt(wolfWrap,10,['#ffd84d','#fff6dc','#ff8a3d']);
+      say(eggs>=MAX_EGGS ? 'Muito forte!' : 'Nham nham!');
+      eating=false;
+    },350);
+  };
+}
+$('#eggBtn1').addEventListener('click',e=>feed(e.currentTarget));
+$('#eggBtn2').addEventListener('click',e=>feed(e.currentTarget));
+
+/* ---------------- scenes ---------------- */
+function show(scene){
+  $('#wardrobe').setAttribute('aria-hidden', scene!=='wardrobe');
+  $('#houses').setAttribute('aria-hidden', scene!=='houses');
+  (scene==='houses' ? $('#stageWolfSpot') : $('#wardrobeWolfSpot')).appendChild(wolfWrap);
+  if(scene==='houses'){ say('Vamos soprar as casinhas!'); }
+}
+$('#goBtn').addEventListener('click',()=>{ A(); sfx.pop(); show('houses'); });
+$('#backBtn').addEventListener('click',()=>{ sfx.pop(); show('wardrobe'); });
+
+/* ---------------- blowing ---------------- */
+const houses = $$('.house');
+let down=0, busy=false, brickTries=0;
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+function gusts(target,dur){
+  const m=mouthPoint(), t=centerOf(target);
+  const dist=t.x-m.x;
+  for(let i=0;i<14;i++){
+    const w=30+Math.random()*50, y=m.y+(Math.random()-.5)*30;
+    const g=spawn('',m.x,y,'fx gust'); g.style.width=w+'px';
+    const spread=(t.y-y)+(Math.random()-.5)*t.h*.8;
+    g.animate([{transform:'translate(0,0)',opacity:0},{opacity:1,offset:.15},{transform:`translate(${dist}px,${spread}px)`,opacity:.2}],
+      {duration:dur*.7,delay:i*(dur*.3/14),easing:'ease-in'}).onfinish=()=>g.remove();
+  }
+}
+function debris(house,color){
+  if(reduce) return; const c=centerOf(house);
+  for(let i=0;i<16;i++){
+    const d=spawn('',c.x+(Math.random()-.5)*c.w*.6,c.y+(Math.random()-.3)*c.h*.5);
+    d.style.width=(6+Math.random()*16)+'px'; d.style.height='6px'; d.style.background=color; d.style.borderRadius='3px';
+    d.animate([{transform:'translate(0,0) rotate(0)',opacity:1},{transform:`translate(${150+Math.random()*350}px,${-120-Math.random()*220}px) rotate(${Math.random()*720}deg)`,opacity:0}],
+      {duration:1100+Math.random()*700,easing:'cubic-bezier(.2,.6,.4,1)'}).onfinish=()=>d.remove();
+  }
+}
+function runningPig(house){
+  const c=centerOf(house), s=Math.max(54,c.w*.45);
+  const p=spawn(`<svg width="${s}" height="${s*.75}" viewBox="0 0 60 45">
+    <path d="M8 22 q-6 -3 -2 -8 q4 -2 3 3" stroke="#f28aab" stroke-width="2" fill="none"/>
+    <rect x="14" y="30" width="5" height="12" rx="2" fill="#f28aab"/><rect x="34" y="30" width="5" height="12" rx="2" fill="#f28aab"/>
+    <ellipse cx="27" cy="24" rx="19" ry="13" fill="#f9b2c8"/>
+    <circle cx="46" cy="18" r="11" fill="#f9b2c8"/><path d="M41 9 L44 2 L48 9Z" fill="#f28aab"/>
+    <ellipse cx="56" cy="20" rx="4.5" ry="4" fill="#f28aab"/><circle cx="48" cy="15" r="1.6" fill="#3a2c47"/>
+    <path d="M44 24 q3 3 6 0" stroke="#a24d6c" stroke-width="1.5" fill="none"/></svg>`, c.x-s/2, c.y+c.h*.5-s*.75);
+  const dist=innerWidth-c.x+s;
+  const hops=[]; for(let i=0;i<=10;i++) hops.push({transform:`translate(${dist*i/10}px,${i%2?-14:0}px)`});
+  p.animate(hops,{duration:1600,easing:'linear'}).onfinish=()=>p.remove();
+}
+async function blow(){
+  if(busy) return; busy=true; A();
+  const target = houses[Math.min(down,2)];
+  // inhale
+  mouth('open'); sfx.inhale(); say('Vou soprar!');
+  if(!reduce) wolfInner.animate([{transform:'scale(1)'},{transform:'scale(1.08,1.04)'}],{duration:550,fill:'forwards'});
+  await sleep(600);
+  // blow
+  mouth('blow'); sfx.whoosh();
+  if(!reduce) wolfInner.animate([{transform:'scale(1.08,1.04)'},{transform:'scale(1)'}],{duration:900,fill:'forwards'});
+  if(down<3) gusts(target,1100);
+  await sleep(700);
+
+  if(down>=3){ mouth('smile'); busy=false; return; }
+  const kind=target.dataset.kind;
+  const strong = eggs>=3 || brickTries>=3;
+  if(kind!=='bricks' || strong){
+    const body=target.querySelector('svg');
+    sfx.crash(); debris(target, kind==='straw'?'#e3ac3c':kind==='sticks'?'#8a5530':'#c9563f');
+    body.animate([{transform:'none',opacity:1},{transform:'translate(20px,-10px) rotate(8deg)',offset:.2},{transform:`translate(${innerWidth*.6}px,-${innerHeight*.5}px) rotate(160deg) scale(.5)`,opacity:0}],
+      {duration:reduce?200:1300,easing:'ease-in',fill:'forwards'});
+    runningPig(target); sfx.oink(.2); sfx.oink(.7);
+    down++;
+    await sleep(900);
+    mouth('smile'); hop(20);
+    if(down===3){ await sleep(400); celebrate(); }
+    else say(['Uhuu!','Voou!'][down-1]||'Uhuu!');
+  } else {
+    brickTries++;
+    const body=target.querySelector('svg');
+    if(!reduce) body.animate([{transform:'rotate(0)'},{transform:'rotate(-3deg)'},{transform:'rotate(3deg)'},{transform:'rotate(-2deg)'},{transform:'rotate(0)'}],{duration:500});
+    sfx.thud(); sfx.oink(.3);
+    await sleep(500); mouth('smile');
+    say('Muito forte! Come ovo!');
+    $('#eggBtn2').classList.add('pulse');
+  }
+  busy=false;
+}
+$('#blowBtn').addEventListener('click',blow);
+
+function celebrate(){
+  sfx.fanfare(); say('Viva! O Lobo Mau soprou tudo!');
+  $('#blowBtn').classList.remove('pulse'); $('#againBtn').classList.add('pulse');
+  hop(36);
+  if(reduce) return;
+  for(let i=0;i<40;i++){
+    const x=Math.random()*innerWidth;
+    const s=spawn(`<svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 0 L12.5 7.5 L20 10 L12.5 12.5 L10 20 L7.5 12.5 L0 10 L7.5 7.5Z" fill="${['#ffd84d','#ff6fa8','#3d9fe6','#4cc26b','#ff8a3d'][i%5]}"/></svg>`,x,-30);
+    s.animate([{transform:'translateY(0) rotate(0)'},{transform:`translateY(${innerHeight+60}px) rotate(${360+Math.random()*360}deg)`}],
+      {duration:1800+Math.random()*1500,delay:Math.random()*800,easing:'ease-in'}).onfinish=()=>s.remove();
+  }
+}
+$('#againBtn').addEventListener('click',()=>{
+  if(busy) return; sfx.pop(); down=0; brickTries=0;
+  houses.forEach((h,i)=>{ const b=h.querySelector('svg'); b.getAnimations().forEach(a=>a.cancel());
+    if(!reduce) b.animate([{transform:'translateY(-120vh)'},{transform:'translateY(0)',offset:.7},{transform:'translateY(-18px)',offset:.85},{transform:'translateY(0)'}],{duration:900,delay:i*200,easing:'ease-in'});
+  });
+  setTimeout(sfx.thud,600); setTimeout(sfx.thud,800); setTimeout(sfx.thud,1000);
+  $('#againBtn').classList.remove('pulse'); $('#blowBtn').classList.add('pulse');
+  say('Casinhas novas!');
+});
+
+applyScale(); render();
+})();
+</script>
+
+</body>
+</html>
