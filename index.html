@@ -20,7 +20,8 @@ html{height:100%;box-sizing:border-box}
 body{height:100%;margin:0;overflow:hidden;background:var(--wall);color:var(--ink);
   font-family:"Trebuchet MS",system-ui,sans-serif;
   touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
-#app{position:relative;width:100%;height:100%;overflow:hidden}
+#app{position:relative;width:100%;height:100%;overflow:hidden;overflow:clip}
+.scene{overflow:hidden;overflow:clip}
 .scene{position:absolute;inset:0;transition:opacity .45s ease}
 .scene[aria-hidden="true"]{opacity:0;pointer-events:none}
 
